@@ -1,0 +1,20 @@
+#cloud-config
+users:
+  - name: yc-user
+    shell: /bin/bash
+    groups: sudo
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCfW1NTnZZoKTXvFrvo+bh+y3mDPSWAwFPmw5u2YSHF5kBBBN+SVSy42RqaqNGrrGyMy1VUGOfqXkKJY6bUL7HF2CpygDczWSIY+jPwin9sHL8nCpFSNRmMdQrUxFtlcjszsZXveD0Br152Ffs/HQKdnSjv/zvlSlwMxBVyzNERfVFcEF42U/rduFZ/tajjVpOVXwiD9ghHUxIOzMl5rZn8kMZlzeEwUKRT4UxjO3xv/9obh9+ltWXDoA/Mw0hPkp05Rrc5KpslVXMXYnsVIQmHxSdLcViEEvizR7I3yvbzL1a5Kuk12kCd1X7kGXGqMNkjr05/02UenAtCnyLbtYMaBK9unWSW6V1i2qg6x4XpqR4qX8SOYcpxhcyO1raP0OxN8ZrR5sYCWjlTMU2nnb90XJaTASt762ldlmYg1FEfrtM8k7N+XjIbd7iglCyMRkWjNtTO202kRfvwSutGvyNB30XjqkAFdu4uUkIwoblYnJXWvZPRhmdE99xWjUlGOAk= appuser
+runcmd:
+  - apt update && echo "####################### [1/7] System updated"
+  - wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | apt-key add -
+  - echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.2.list
+  - apt update && echo "####################### [2/7] MongoDB repo added"
+  - apt install -y ruby-full ruby-bundler build-essential mongodb-org git && echo "####################### [3/7] ruby, bundler, MongoDB and deps installed"
+  - systemctl start mongod
+  - systemctl enable mongod && echo "####################### [4/7] MongoDB started"
+  - su yc-user -c 'cd && git clone -b monolith https://github.com/express42/reddit.git' && echo "####################### [5/7] Reddit app cloned"
+  - su yc-user -c 'cd ~/reddit && bundle install' && echo "####################### [6/7] Reddit app installed"
+  - su yc-user -c 'cd ~/reddit && puma -d' && echo "####################### [7/7] puma server started, check http://ip:9292/"
+  - echo "####################### Cloud-init complete."
