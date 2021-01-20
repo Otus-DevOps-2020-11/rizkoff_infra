@@ -1,10 +1,37 @@
 
+# лекция 6: дз
+
+
+testapp_IP = 178.154.253.46
+
+testapp_port = 9292
+
+
+ > создать compute instance с помощью yc
+
+```
+yc compute instance create --name reddit-app --hostname reddit-app --memory=512M --core-fraction=5 --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 --metadata serial-port-enable=1 --ssh-key ~/.ssh/appuser.pub
+```
+
+ >> Команды по настройке системы и деплоя приложения заворачиваем в bash скрипты
+
+ - install_ruby.sh
+ - install_mongodb.sh
+ - deploy.sh
+
+ >> Создать startup script, исполняемый после создания compute instance
+
+ - создаем metadata.yaml с необходимыми данными и командами и передаем имя файла `--metadata-from-file user-data=./metadata.yaml` команде yc при создании инстанса:
+
+```
+yc compute instance create --name reddit-app --hostname reddit-app --memory=512M --core-fraction=5 --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=10GB --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 --metadata serial-port-enable=1 --metadata-from-file user-data=./metadata.yaml
+```
+
 # лекция 5: дз
 
-bastion_IP = 130.193.51.231
+bastion_IP = 178.154.253.107
 
-someinternalhost_IP = 10.130.0.35
-
+someinternalhost_IP = 10.130.0.14
 
 
 > Задача: Подключение workstation > bastion > someinternalhost в одну команду, через ssh-агента:
@@ -55,7 +82,7 @@ Host someinternalhost
 
 ```
 [and@ryzhkov ~]$ dig +short ${bastion_IP}.sslip.io
-130.193.51.231
+178.154.253.107
 ```
 
 идем на vpn на bastion через браузер `https://${bastion_IP}.sslip.io` <br>
