@@ -1,4 +1,61 @@
 
+# лекция 7: дз "packer"
+
+ > используем packer для создания образа для compute instance.
+
+ - ставим packer, создаем service account key file, по шагам в дз.
+ - создаем *.json с параметрами и provisioner-инструкциями для packer.
+   - исталляция ruby, mongo - представлена 2мя provisioner скриптами
+ - запускаем сборку образа: `packer build ./ubuntu16.json`
+
+ > 7.2. Диагностика ошибки
+
+ >> `Build 'yandex' errored: Failed to find instance ip address: instance has no one IPv4 external address.`
+
+ - фиксируется добавлением в секции "builders":
+
+```
+            "use_ipv4_nat": true
+```
+
+  >> отказ создавать еще одну подсеть (дефолтное поведение CLI-команды создания инстанса)
+
+ - фиксим использованием существующей, указываем в секции "builders":
+
+```
+            "subnet_id": "{{user `subnet_id`}}",
+```
+
+
+  > выносим часть параметров в файл variables.json.
+
+ - заносим variables.json в .gitignore; переносим значения privacy-sensitive части параметров в variables.json.
+ - создаем variables.json.example с фейковыми значениями параметров из variables.json, для re-use git-кода
+ - в новом проекте необходимо 
+   -- `cp variables.json.example variables.json`
+   -- поставить правильные значения в variables.json
+ - команда создания образа: `packer build -var-file=./variables.json ./ubuntu16.json`
+ - созданный образ используем при создании compute instance, логинимся по ssh.
+ - вручную инсталлируем & запускаем web-приложение `https://github.com/express42/reddit.git` вручную.
+ - проверяем работу в браузере: http://<внешний IP машины>:9292
+
+ > 10.1*. Построение bake-образа
+
+ - создаем immutable.json; основные отличия - добавление 2 provisioners
+   - `sleep 50`, для снятия блокировки apt-get
+   - набор inline команд установки https://github.com/express42/reddit.git с пре-реквизитами
+ - команда создания образа: `packer build -var-file=./variables.json ./immutable.json`
+ - созданный образ используем при создании compute instance, логинимся по ssh.
+ - ручной доустановки приложения не требуется.
+ - проверяем работу в браузере: http://<внешний IP машины>:9292
+
+ > 10.2*. Автоматизация создания ВМ
+
+ - скрипт `config-scripts/create-reddit-vm.sh`; вместо создания compute instance через GUI, одна CLI-команда.
+ - в случае существования нескольких образов reddit-full-XXXXXXXXXX, через параметр image-family=reddit-full будет взят с более поздней датой создания
+ - usage: `bash config-scripts/create-reddit-vm.sh [ instance-name ]`
+  - в случае пустого аргумента `instance-name`, инстансу присваивается сгенерированное имя reddit-app-XXXXXXXX.
+
 # лекция 6: дз
 
 
