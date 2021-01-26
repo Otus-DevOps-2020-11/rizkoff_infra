@@ -1,2 +1,8 @@
 packer/variables.json
 packer/key.json
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+*.tfvars
+.terraform/
+*.sw?
