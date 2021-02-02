@@ -20,18 +20,7 @@ variable private_key_path {
 variable image_id {
   description = "boot disk image id"
 }
-variable subnet_id {
-  description = "subnet id"
-}
 variable app_scale {
   description = "app scaling factor for lb"
   default     = 1
-}
-variable lb_external_port {
-  description = "app listening external lb port"
-  default     = 9292
-}
-variable lb_target_group_region_id {
-  description = "lb tgt grp region id"
-  default     = "ru-central1"
 }
