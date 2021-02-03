@@ -24,3 +24,15 @@ variable app_scale {
   description = "app scaling factor for lb"
   default     = 1
 }
+variable app_disk_image {
+  description = "Disk image for reddit app"
+  default = "reddit-app-base"
+}
+variable db_disk_image {
+  description = "Disk image for reddit db"
+  default = "reddit-db-base"
+}
+variable db_nat_ip_address {
+  description = "db vm ip address"
+  default = "N/A"
+}
