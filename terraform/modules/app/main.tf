@@ -1,8 +1,8 @@
-resource "yandex_compute_instance" "db" {
-  name = "reddit-db"
+resource "yandex_compute_instance" "app" {
+  name = "reddit-app"
   platform_id = "standard-v2"
   labels = {
-    tags = "reddit-db"
+    tags = "reddit-app"
   }
 
   resources {
@@ -13,12 +13,12 @@ resource "yandex_compute_instance" "db" {
 
   boot_disk {
     initialize_params {
-      image_id = var.db_disk_image
+      image_id = var.app_disk_image
     }
   }
 
   network_interface {
-    subnet_id = yandex_vpc_subnet.app-subnet.id
+    subnet_id = var.subnet_id
     nat = true
   }
 
@@ -34,11 +34,13 @@ resource "yandex_compute_instance" "db" {
     private_key = file(var.private_key_path)
   }
 
+  provisioner "file" {
+    content     = templatefile("files/puma.service", { DB_NAT_IP_ADDRESS = var.db_nat_ip_address})
+    destination = "/tmp/puma.service"
+  }
+
   provisioner "remote-exec" {
-    inline = [
-      "sudo sed -i -r 's/bindIp: [0-9\\.]+/bindIp: ${self.network_interface.0.ip_address}/' /etc/mongod.conf",
-      "sudo systemctl restart mongod"
-    ]
+    script = "files/deploy.sh"
   }
 
 
