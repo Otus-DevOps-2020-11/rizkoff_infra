@@ -35,12 +35,12 @@ resource "yandex_compute_instance" "app" {
   }
 
   provisioner "file" {
-    content     = templatefile("files/puma.service", { DB_NAT_IP_ADDRESS = var.db_nat_ip_address})
+    content     = templatefile("${path.module}/files/puma.service", { DB_NAT_IP_ADDRESS = var.db_nat_ip_address})
     destination = "/tmp/puma.service"
   }
 
   provisioner "remote-exec" {
-    script = "files/deploy.sh"
+    script = "${path.module}/files/deploy.sh"
   }
 
 
