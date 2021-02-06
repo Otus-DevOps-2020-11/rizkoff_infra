@@ -36,13 +36,3 @@ variable db_nat_ip_address {
   description = "db vm ip address"
   default     = "N/A"
 }
-ariable s3_state_backend_bucket {               
-  description = "S3 bucket name to store state remote backend"
-  default     = "state-remote-backend"           
-} 
-variable s3_access_key {                         
-  description = "S3 access key for state remote backend"
-} 
-variable s3_secret_key {                         
-  description = "S3 secret key for state remote backend"
-}
