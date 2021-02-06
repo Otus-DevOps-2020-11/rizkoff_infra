@@ -8,3 +8,6 @@ image_id         = "xxxxxxxxxxxxxxxxxxxx"
 app_scale        = 1
 app_disk_image   = "reddit-app-base"
 db_disk_image    = "reddit-db-base"
+s3_state_backend_bucket = "state-remote-backend"
+s3_access_key = "xxxxxxxxxxxxxxxxxxxx"
+s3_secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
