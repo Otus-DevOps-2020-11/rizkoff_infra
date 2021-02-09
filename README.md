@@ -1,4 +1,78 @@
 
+# лекция 9: дз "terraform-2. Создание Terraform модулей для управления компонентами инфраструктуры."
+
+ > следуем инструкциям ДЗ
+
+ - lb.tf переносим в files/; параметр кол-во инстансов для lb ставим = 1
+ - создаем сетевые ресурсы `yandex_vpc_network, yandex_vpc_subnet` 
+ - выносим redis бэкенд нашего приложения в отдельный VM instance; для этого
+   - модифицируем packer и пересобираем образы 2 VM для расщепленных инстансов app, db:
+   - `(cd packer/; packer build -var-file=./variables.json ./app.json)`
+   - `(cd packer/; packer build -var-file=./variables.json ./db.json)`
+ - разносим конфиги из `main.tf` в `app.tf, db.tf`; конфигурацию сети в `vpc.tf`
+ - соотв-е изменения с переменными и параметрами `variables.tf, outputs.tf, terraform.tfvars, terraform.tfvars.example`
+ - `terraform apply` #проверяем создание ресурсов - с последующим `terraform destroy`
+ - разбиваем код на модули `modules/db, modules/app`, переносим соотв. контент из `app.tf, db.tf, vpc.tf`; в `main.tf` определяем модули
+ - загружаем модули из локального источника в кэш `.terraform`:
+   - `terraform get`
+ - модифицируем переменные на пользование модулями `module.app, module.db` вместо `yandex_compute_instance.app....`
+ - `terraform apply` #проверяем создание ресурсов - с последующим `terraform destroy`
+ - создаем инфраструктуру для 2х окружений - `stage, prod`
+ - дублируем код в `stage/, prod/` для создания идентичных ресурсов для `stage, prod`
+ - `terraform apply` #проверяем создание ресурсов - с последующим `terraform destroy`
+
+ > самостоятельное задание: 
+
+ - удаляем из `terraform/` файлы `main.tf, outputs.tf, terraform.tfvars, variables.tf` так как они теперь перенесены в `stage/ prod/`
+ - параметризуем модули переменными `path.module, app_disk_image, subnet_id`
+   - при желании, можем параметризовать разные defaults для `core_fraction, cores, memory` для stage VS prod; но по задаче у нас пока идентичные env'ы
+ - `terraform fmt`
+
+
+ > самостоятельное задание со *: перенос tfstate на удаленный бэкенд - в S3 бакет на облаке Yandex Object Storage
+
+ - создаем или используем созданный service-account (в нашем примере `serviceotus`):
+   - `yc iam service-account list` - в случае если таковой есть, используем; иначе
+   - `yc iam service-account create --name serviceotus --description "otus exercizes-only service account"`
+ - создаем cred's для работы по S3 (и запоминаем, т.к. команда дает разовый output без возм-ти повтора)
+   - `yc iam access-key create --service-account-name serviceotus --description "S3 access key for state remote backend" [ --folder-id xxxxxxxxxxxxxxxxxxxx ]` # --folder-id по умолчанию будет использован из вывода `yc config list`
+   - output:
+```
+access_key:
+  id: xxxxxxxxxxxxxxxxxxxx
+  service_account_id: aje6c58u7js0pl8n2284
+  created_at: "2021-02-05T10:48:53.369498Z"
+  description: S3 access key for state remote backend
+  key_id: xxxxxxxxxxxxxxxxxxxx <<<<<<<<<<<<<<<<<<<<<<<<<<<<< запоминаем: см. access_key в backend.tf
+secret: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  <<<<<<<<<< запоминаем: см. secret_key в backend.tf
+```
+ - создаем через UI console.cloud.yandex.ru >> Object Storage >> "создать бакет": бакет с именем (в нашем примере) `state-remote-backend`
+ - в `stage/backend.tf, prod/backend.tf` переопределяем хранение tfstate на remote (S3) backend.
+ - избавляемся от `terraform.tfstate` в `stage/, prod/`.
+   - в обоих файлах: `stage/backend.tf, prod/backend.tf` - ключи S3-объекта делаем одинаковыми (в нашем примере `terraform.tfstate`)
+   - это приведет к тому, что, напр., создавая окружение stage, мы можем видеть/менять его из prod, и наоборот - что и требовалось, т.к. у нас по условию задачи пока "слипшиеся" naming conventions и единый namespace в едином folder-id.
+ - `terraform init` # (и в `stage/` и в `prod/`) т.к. имеем смену бэкенда
+ - `terraform apply` #проверяем создание ресурсов - с последующим `terraform destroy`
+ - проверяем: в `stage/, prod/` не появляются `terraform.tfstate`; в бакете `state-remote-backend` - появляется.
+ - попытка одновременного apply неуспешна (два env, один tfstate).
+
+
+
+ > самостоятельное задание с **: вернуть provisioner для развертывания `app` instance
+
+ - возвращаем `files/* ` в tf-код; имеем проблему:
+   - до расщепления на `app,db`:
+   - listener `db` слушал localhost; после - необходимо прослушивать внешний адрес
+   - до расщепления на `app,db`:
+   - `app` делал коннект к localhost; после - необходим коннект с внешней mongodb
+ - решаем:
+   - `app`: переменную окружения `DATABASE_URL` передаем при запуске сервиса `puma` (`files/puma.service`)
+   - `db`: listener базы mongodb управляется ключом `bindIp: X.X.X.X`; меняем значение c `172.0.0.1` на ip-адрес app-сервера (можно было бы поменять на значение "слушать всех" = `0.0.0.0`, но почему бы не сделать секюрней.) - изменение делаем `sed`-ом в inline remote-exec провижинере, в `modules/db/main.tf`.
+
+
+
+
+
 # лекция 8: дз "terraform-1. Практика IaC с использованием Terraform"
 
  > проверяем пре-реквизиты

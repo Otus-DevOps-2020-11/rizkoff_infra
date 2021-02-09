@@ -20,18 +20,19 @@ variable private_key_path {
 variable image_id {
   description = "boot disk image id"
 }
-variable subnet_id {
-  description = "subnet id"
-}
 variable app_scale {
   description = "app scaling factor for lb"
   default     = 1
 }
-variable lb_external_port {
-  description = "app listening external lb port"
-  default     = 9292
+variable app_disk_image {
+  description = "Disk image for reddit app"
+  default     = "reddit-app-base"
 }
-variable lb_target_group_region_id {
-  description = "lb tgt grp region id"
-  default     = "ru-central1"
+variable db_disk_image {
+  description = "Disk image for reddit db"
+  default     = "reddit-db-base"
+}
+variable db_nat_ip_address {
+  description = "db vm ip address"
+  default     = "N/A"
 }
